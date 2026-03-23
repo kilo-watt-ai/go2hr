@@ -91,7 +91,7 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36">
           <div className="max-w-3xl mx-auto text-center">
             <Badge variant="secondary" className="mb-6 text-sm px-4 py-1.5">
-              Serving the Triangle &amp; Beyond
+              SHRM-Certified Consultants, On Your Schedule
             </Badge>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-neutral-900 tracking-tight leading-tight">
               Expert HR Consulting{" "}
@@ -369,7 +369,7 @@ export default function HomePage() {
             Ready to Solve Your HR Challenges?
           </h2>
           <p className="mt-4 text-lg text-white/80 max-w-2xl mx-auto">
-            Join hundreds of small businesses across North Carolina that trust{" "}
+            Join hundreds of small businesses that trust{" "}
             {SITE_NAME} to connect them with expert HR guidance. Your first
             consultation is just a few clicks away.
           </p>

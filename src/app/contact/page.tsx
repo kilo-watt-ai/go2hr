@@ -15,8 +15,8 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Location",
-    detail: "Raleigh, NC",
-    description: "Serving the Triangle and beyond",
+    detail: "United States",
+    description: "Consultants available nationwide",
   },
   {
     icon: Clock,

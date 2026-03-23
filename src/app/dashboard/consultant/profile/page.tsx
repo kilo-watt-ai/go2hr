@@ -48,7 +48,7 @@ export default function ConsultantProfilePage() {
             { label: "Full Name", placeholder: "Dr. Jane Smith" },
             { label: "Email Address", placeholder: "jane@hrconsulting.com" },
             { label: "Phone Number", placeholder: "(919) 555-0123" },
-            { label: "Location", placeholder: "Raleigh, NC" },
+            { label: "Location", placeholder: "City, State" },
             { label: "Headline", placeholder: "Senior HR Consultant | SHRM-SCP" },
             { label: "Hourly Rate ($)", placeholder: "150" },
           ].map((field) => (

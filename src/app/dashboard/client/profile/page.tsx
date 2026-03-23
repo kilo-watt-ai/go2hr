@@ -61,7 +61,7 @@ export default function ClientProfilePage() {
             { label: "Company Name", placeholder: "Acme Inc." },
             { label: "Industry", placeholder: "Technology" },
             { label: "Company Size", placeholder: "11-25 employees" },
-            { label: "Location", placeholder: "Raleigh, NC" },
+            { label: "Location", placeholder: "City, State" },
           ].map((field) => (
             <div key={field.label} className="space-y-1">
               <label className="block text-sm font-medium text-neutral-700">

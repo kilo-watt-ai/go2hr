@@ -5,7 +5,7 @@ import Button from "@/components/ui/Button";
 export const metadata: Metadata = {
   title: "About Us",
   description:
-    "Learn about Go2HR's mission to make expert HR consulting accessible to every small business in North Carolina.",
+    "Learn about Go2HR's mission to make expert HR consulting accessible to every small business.",
 };
 
 const values = [
@@ -68,9 +68,9 @@ export default function AboutPage() {
             <h2 className="text-3xl font-bold text-neutral-900 mb-6">Our Story</h2>
             <div className="prose prose-lg text-neutral-600 space-y-4">
               <p>
-                Go2HR was born from a simple observation: small businesses in North
-                Carolina face the same complex HR challenges as large corporations,
-                but without the resources to handle them.
+                Go2HR was born from a simple observation: small businesses face the
+                same complex HR challenges as large corporations, but without the
+                resources to handle them.
               </p>
               <p>
                 Every day, business owners struggle with compliance questions,
@@ -82,15 +82,9 @@ export default function AboutPage() {
               <p>
                 We built Go2HR to bridge that gap. Our platform connects you with
                 SHRM-certified HR consultants who specialize in serving small
-                businesses in the Triangle and across North Carolina. With
-                transparent pricing, verified credentials, and a booking process
-                that takes minutes, getting expert HR help is now as simple as it
-                should be.
-              </p>
-              <p>
-                Based in Raleigh, we&apos;re proud to serve the growing small business
-                community across the Triangle, with plans to expand throughout the
-                Southeast.
+                businesses. With transparent pricing, verified credentials, and a
+                booking process that takes minutes, getting expert HR help is now as
+                simple as it should be.
               </p>
             </div>
           </div>
@@ -139,20 +133,20 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Location */}
+      {/* Mission */}
       <section className="bg-primary-50 py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <MapPin className="w-6 h-6 text-primary" />
-            <h2 className="text-3xl font-bold text-neutral-900">Based in Raleigh, NC</h2>
+            <Award className="w-6 h-6 text-primary" />
+            <h2 className="text-3xl font-bold text-neutral-900">Built for Small Business</h2>
           </div>
           <p className="text-lg text-neutral-600 max-w-2xl mx-auto mb-4">
-            Proudly serving the Research Triangle and expanding across North
-            Carolina, Virginia, and South Carolina.
+            We exclusively serve businesses under 50 employees because they
+            deserve the same quality HR support as the Fortune 500.
           </p>
           <div className="flex items-center justify-center gap-2 text-neutral-500">
-            <Award className="w-5 h-5" />
-            <span className="text-sm">Serving Raleigh, Durham, Chapel Hill, Cary, and Charlotte</span>
+            <Shield className="w-5 h-5" />
+            <span className="text-sm">Every consultant is SHRM or HRCI certified and verified by our team</span>
           </div>
         </div>
       </section>

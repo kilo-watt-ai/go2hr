@@ -38,10 +38,7 @@ export default function Footer() {
               <span className="text-xl font-bold text-white">{SITE_NAME}</span>
             </Link>
             <p className="text-sm text-neutral-400 mb-4">
-              Connecting small businesses with vetted HR consultants in the Triangle and beyond.
-            </p>
-            <p className="text-sm text-neutral-500">
-              Raleigh, NC
+              Connecting small businesses with vetted, SHRM-certified HR consultants.
             </p>
           </div>
 
@@ -87,7 +84,7 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.
           </p>
           <p className="text-sm text-neutral-500">
-            Made in Raleigh, NC
+            Expert HR Consulting for Small Business
           </p>
         </div>
       </div>

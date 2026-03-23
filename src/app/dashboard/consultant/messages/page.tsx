@@ -35,7 +35,7 @@ const sampleConversations: Conversation[] = [
   {
     id: "conv-2",
     clientName: "Lisa Kim",
-    clientCompany: "Triangle Wellness Group",
+    clientCompany: "Bright Wellness Group",
     initials: "LK",
     lastMessage: "Looking forward to our session tomorrow!",
     timestamp: "Yesterday",

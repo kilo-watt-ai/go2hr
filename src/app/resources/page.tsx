@@ -22,7 +22,7 @@ export default function ResourcesPage() {
             HR Resources for Small Business
           </h1>
           <p className="text-xl text-neutral-600 max-w-2xl mx-auto">
-            Expert guidance on North Carolina employment law, compliance,
+            Expert guidance on employment law, compliance,
             and HR best practices — written by certified HR professionals.
           </p>
         </div>
