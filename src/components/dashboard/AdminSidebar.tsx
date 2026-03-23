@@ -11,6 +11,7 @@ import {
   Settings,
   FileText,
   BarChart3,
+  DollarSign,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -26,6 +27,7 @@ const adminLinks: AdminLink[] = [
   { label: "Applications", href: "/dashboard/admin/applications", icon: UserCheck },
   { label: "Consultants", href: "/dashboard/admin/consultants", icon: Shield },
   { label: "Users", href: "/dashboard/admin/users", icon: Users },
+  { label: "Finances", href: "/dashboard/admin/finances", icon: DollarSign },
   { label: "Reviews", href: "/dashboard/admin/reviews", icon: Star },
   { label: "Settings", href: "/dashboard/admin/settings", icon: Settings },
 ];
