@@ -46,8 +46,13 @@ function LoginForm() {
       } else {
         router.push("/dashboard/client");
       }
-    } catch {
-      setError("Unable to connect. Please try again later.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("not configured")) {
+        setError("Authentication is not configured yet. Add Supabase environment variables in Vercel project settings.");
+      } else {
+        setError("Unable to connect. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }
