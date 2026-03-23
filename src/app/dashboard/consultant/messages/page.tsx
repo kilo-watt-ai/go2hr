@@ -75,6 +75,16 @@ export default function ConsultantMessagesPage() {
       },
     ]);
     setMessageText("");
+    fetch('/api/messages/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recipientEmail: 'notify@go2hr.com',
+        senderName: 'Consultant',
+        messagePreview: messageText.trim().slice(0, 100),
+        conversationUrl: window.location.href,
+      }),
+    }).catch(() => {});
   }
 
   if (activeConversation && activeConv) {

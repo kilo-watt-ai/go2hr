@@ -8,10 +8,28 @@ import Input from "@/components/ui/Input";
 
 export default function ForgotPasswordPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email');
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) setSubmitted(true);
+      else setError('Something went wrong. Please try again.');
+    } catch {
+      setError('Unable to connect. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -57,8 +75,9 @@ export default function ForgotPasswordPage() {
                 placeholder="you@company.com"
                 required
               />
-              <Button type="submit" size="lg" className="w-full">
-                Send Reset Link
+              {error && <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">{error}</div>}
+              <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                {loading ? "Sending..." : "Send Reset Link"}
               </Button>
             </form>
           )}

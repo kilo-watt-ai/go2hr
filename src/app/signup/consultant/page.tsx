@@ -9,10 +9,40 @@ import { SPECIALTIES, INDUSTRIES, CREDENTIALS, STATES } from "@/lib/constants";
 
 export default function ConsultantSignupPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+    const formData = new FormData(e.currentTarget);
+    // Collect multi-select checkboxes
+    const specialties = formData.getAll("specialties");
+    const industries = formData.getAll("industries");
+    const states = formData.getAll("states");
+    const data = {
+      ...Object.fromEntries(formData),
+      specialties,
+      industries,
+      states,
+    };
+    try {
+      const res = await fetch("/api/signup/consultant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        setSubmitted(true);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    } catch {
+      setError("Unable to submit application. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (submitted) {
@@ -201,8 +231,13 @@ export default function ConsultantSignupPage() {
               and{" "}
               <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
             </p>
-            <Button type="submit" size="lg" className="w-full">
-              Submit Application
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">
+                {error}
+              </div>
+            )}
+            <Button type="submit" size="lg" className="w-full" disabled={loading}>
+              {loading ? "Submitting..." : "Submit Application"}
             </Button>
           </form>
         </div>

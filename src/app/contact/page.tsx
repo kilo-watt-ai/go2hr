@@ -28,10 +28,30 @@ const contactInfo = [
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+    const formData = new FormData(e.currentTarget);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(formData)),
+      });
+      if (res.ok) {
+        setSubmitted(true);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    } catch {
+      setError("Unable to send message. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -176,8 +196,13 @@ export default function ContactPage() {
                         className="w-full px-4 py-3 rounded-lg border border-neutral-300 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors resize-y"
                       />
                     </div>
-                    <Button type="submit" size="lg" className="w-full sm:w-auto">
-                      Send Message
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">
+                        {error}
+                      </div>
+                    )}
+                    <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={loading}>
+                      {loading ? "Sending..." : "Send Message"}
                     </Button>
                   </form>
                 )}
