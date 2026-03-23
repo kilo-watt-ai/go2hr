@@ -5,6 +5,7 @@ import Link from "next/link";
 import { KeyRound, CheckCircle, ArrowLeft } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -16,15 +17,28 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError("");
     const formData = new FormData(e.currentTarget);
-    const email = formData.get('email');
+    const email = formData.get('email') as string;
     try {
-      const res = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+      // 1. Trigger Supabase password reset
+      const supabase = createClient();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?redirect=/dashboard/client`,
       });
-      if (res.ok) setSubmitted(true);
-      else setError('Something went wrong. Please try again.');
+      if (resetError) {
+        setError(resetError.message);
+        return;
+      }
+      // 2. Fire the Loops.so event
+      try {
+        await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+      } catch {
+        // Email API failure is non-blocking
+      }
+      setSubmitted(true);
     } catch {
       setError('Unable to connect. Please try again later.');
     } finally {

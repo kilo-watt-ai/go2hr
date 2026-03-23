@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Building2, CheckCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { INDUSTRIES, COMPANY_SIZES } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 
 export default function BusinessSignupPage() {
+  const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -17,17 +20,46 @@ export default function BusinessSignupPage() {
     setLoading(true);
     setError("");
     const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const firstName = formData.get("firstName") as string;
+    const lastName = formData.get("lastName") as string;
+    const company = formData.get("company") as string;
+    const industry = formData.get("industry") as string;
+    const companySize = formData.get("companySize") as string;
     try {
-      const res = await fetch("/api/signup/business", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(Object.fromEntries(formData)),
+      // 1. Create Supabase auth account
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role: "client",
+            firstName,
+            lastName,
+            company,
+            industry,
+            companySize,
+          },
+        },
       });
-      if (res.ok) {
-        setSubmitted(true);
-      } else {
-        setError("Something went wrong. Please try again.");
+      if (authError) {
+        setError(authError.message);
+        return;
       }
+      // 2. Fire the Loops.so email API call
+      try {
+        await fetch("/api/signup/business", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(Object.fromEntries(formData)),
+        });
+      } catch {
+        // Email API failure is non-blocking
+      }
+      setSubmitted(true);
+      setTimeout(() => router.push("/dashboard/client"), 2000);
     } catch {
       setError("Unable to create account. Please try again later.");
     } finally {

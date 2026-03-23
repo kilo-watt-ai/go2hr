@@ -6,6 +6,7 @@ import { Award, CheckCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { SPECIALTIES, INDUSTRIES, CREDENTIALS, STATES } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ConsultantSignupPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -21,6 +22,10 @@ export default function ConsultantSignupPage() {
     const specialties = formData.getAll("specialties");
     const industries = formData.getAll("industries");
     const states = formData.getAll("states");
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const firstName = formData.get("firstName") as string;
+    const lastName = formData.get("lastName") as string;
     const data = {
       ...Object.fromEntries(formData),
       specialties,
@@ -28,16 +33,34 @@ export default function ConsultantSignupPage() {
       states,
     };
     try {
-      const res = await fetch("/api/signup/consultant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+      // 1. Create Supabase auth account
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role: "consultant",
+            firstName,
+            lastName,
+          },
+        },
       });
-      if (res.ok) {
-        setSubmitted(true);
-      } else {
-        setError("Something went wrong. Please try again.");
+      if (authError) {
+        setError(authError.message);
+        return;
       }
+      // 2. Fire the Loops.so email API call
+      try {
+        await fetch("/api/signup/consultant", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+      } catch {
+        // Email API failure is non-blocking
+      }
+      setSubmitted(true);
     } catch {
       setError("Unable to submit application. Please try again later.");
     } finally {

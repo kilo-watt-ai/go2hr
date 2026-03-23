@@ -1,17 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LogIn } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { createClient } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError("Login functionality will be enabled once authentication is configured.");
+    setLoading(true);
+    setError("");
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    try {
+      const supabase = createClient();
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
+      // Check for redirect param first
+      const redirect = searchParams.get("redirect");
+      if (redirect) {
+        router.push(redirect);
+        return;
+      }
+      // Route based on user role
+      const role = data.user?.user_metadata?.role;
+      if (role === "admin") {
+        router.push("/dashboard/admin");
+      } else if (role === "consultant") {
+        router.push("/dashboard/consultant");
+      } else {
+        router.push("/dashboard/client");
+      }
+    } catch {
+      setError("Unable to connect. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -32,7 +71,7 @@ export default function LoginPage() {
         <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-4 py-3 text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">
                 {error}
               </div>
             )}
@@ -63,8 +102,8 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <Button type="submit" size="lg" className="w-full">
-              Log In
+            <Button type="submit" size="lg" className="w-full" disabled={loading}>
+              {loading ? "Logging in..." : "Log In"}
             </Button>
           </form>
         </div>
@@ -84,5 +123,13 @@ export default function LoginPage() {
         </div>
       </div>
     </section>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
