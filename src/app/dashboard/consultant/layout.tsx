@@ -5,6 +5,7 @@ const consultantLinks: SidebarLink[] = [
   { label: "Dashboard", href: "/dashboard/consultant", iconName: "LayoutDashboard" },
   { label: "Availability", href: "/dashboard/consultant/availability", iconName: "Clock" },
   { label: "My Bookings", href: "/dashboard/consultant/bookings", iconName: "CalendarCheck" },
+  { label: "Messages", href: "/dashboard/consultant/messages", iconName: "MessageSquare" },
   { label: "Edit Profile", href: "/dashboard/consultant/profile", iconName: "UserPen" },
   { label: "Documents", href: "/dashboard/consultant/documents", iconName: "FileText" },
   { label: "Earnings & Payouts", href: "/dashboard/consultant/earnings", iconName: "DollarSign" },

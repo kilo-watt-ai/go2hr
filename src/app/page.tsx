@@ -72,7 +72,16 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function HomePage() {
   const featuredConsultants = consultants.slice(0, 3);
-  const featuredReviews = reviews.filter((r) => r.rating === 5).slice(0, 3);
+  // Show reviews from different consultants for variety
+  const seenConsultants = new Set<string>();
+  const featuredReviews = reviews
+    .filter((r) => r.rating === 5)
+    .filter((r) => {
+      if (seenConsultants.has(r.consultantSlug)) return false;
+      seenConsultants.add(r.consultantSlug);
+      return true;
+    })
+    .slice(0, 3);
 
   return (
     <>
@@ -277,7 +286,7 @@ export default function HomePage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    href={`/consultant/${consultant.slug}`}
+                    href={`/consultants/${consultant.slug}`}
                     className="w-full"
                   >
                     View Profile
@@ -338,7 +347,7 @@ export default function HomePage() {
                       <p className="text-sm text-primary mt-1">
                         Worked with{" "}
                         <Link
-                          href={`/consultant/${consultant.slug}`}
+                          href={`/consultants/${consultant.slug}`}
                           className="font-medium hover:underline"
                         >
                           {consultant.name}

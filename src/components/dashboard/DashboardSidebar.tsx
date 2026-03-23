@@ -15,6 +15,7 @@ import {
   FolderOpen,
   DollarSign,
   Star,
+  MessageSquare,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -31,6 +32,7 @@ const iconMap: Record<string, LucideIcon> = {
   FolderOpen,
   DollarSign,
   Star,
+  MessageSquare,
 };
 
 export interface SidebarLink {

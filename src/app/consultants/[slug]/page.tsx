@@ -344,9 +344,16 @@ export default async function ConsultantProfilePage({ params }: PageProps) {
 
             {/* Reviews */}
             <section>
-              <h2 className="text-xl font-bold text-neutral-900 mb-6">
-                Reviews ({reviews.length})
-              </h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-neutral-900">
+                  Reviews ({consultant.reviewCount})
+                </h2>
+                {reviews.length < consultant.reviewCount && (
+                  <p className="text-sm text-neutral-500">
+                    Showing {reviews.length} most recent
+                  </p>
+                )}
+              </div>
 
               {reviews.length > 0 ? (
                 <div className="space-y-6">
@@ -429,11 +436,11 @@ export default async function ConsultantProfilePage({ params }: PageProps) {
                 </div>
 
                 <div className="space-y-3">
-                  <Button href="#" size="lg" className="w-full">
+                  <Button href={`/dashboard/client/book?consultant=${slug}`} size="lg" className="w-full">
                     <Calendar className="w-5 h-5 mr-2" aria-hidden="true" />
                     Book a Session
                   </Button>
-                  <Button href="#" variant="outline" size="lg" className="w-full">
+                  <Button href={`/dashboard/client/messages?to=${slug}`} variant="outline" size="lg" className="w-full">
                     <MessageSquare className="w-5 h-5 mr-2" aria-hidden="true" />
                     Send a Message
                   </Button>
@@ -467,10 +474,10 @@ export default async function ConsultantProfilePage({ params }: PageProps) {
               </p>
             </div>
             <div className="flex-1 flex gap-2">
-              <Button href="#" size="sm" className="flex-1">
+              <Button href={`/dashboard/client/book?consultant=${slug}`} size="sm" className="flex-1">
                 Book a Session
               </Button>
-              <Button href="#" variant="outline" size="sm">
+              <Button href={`/dashboard/client/messages?to=${slug}`} variant="outline" size="sm">
                 <MessageSquare className="w-4 h-4" aria-label="Send a message" />
               </Button>
             </div>

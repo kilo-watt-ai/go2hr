@@ -5,6 +5,7 @@ const clientLinks: SidebarLink[] = [
   { label: "Dashboard", href: "/dashboard/client", iconName: "LayoutDashboard" },
   { label: "Book a Session", href: "/dashboard/client/book", iconName: "CalendarPlus" },
   { label: "My Sessions", href: "/dashboard/client/sessions", iconName: "CalendarCheck" },
+  { label: "Messages", href: "/dashboard/client/messages", iconName: "MessageSquare" },
   { label: "Documents", href: "/dashboard/client/documents", iconName: "FileText" },
   { label: "Billing & Packages", href: "/dashboard/client/billing", iconName: "CreditCard" },
   { label: "Profile & Company", href: "/dashboard/client/profile", iconName: "UserCircle" },
