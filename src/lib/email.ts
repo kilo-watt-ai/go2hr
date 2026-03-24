@@ -304,7 +304,7 @@ export async function handlePasswordReset(data: { email: string }) {
 
   if (TEMPLATES.passwordReset) {
     await sendTransactionalEmail(TEMPLATES.passwordReset, data.email, {
-      resetLink: `https://go2hr.com/reset-password?token=PLACEHOLDER`,
+      resetLink: `https://go2hr.io/reset-password?token=PLACEHOLDER`,
     });
   }
 }

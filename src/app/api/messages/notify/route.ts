@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       recipientEmail,
       senderName,
       messagePreview,
-      conversationUrl: conversationUrl || "https://go2hr.com/dashboard",
+      conversationUrl: conversationUrl || "https://go2hr.io/dashboard",
     });
 
     return NextResponse.json({ success: true });

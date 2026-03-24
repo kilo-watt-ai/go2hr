@@ -105,8 +105,8 @@ export default function TermsPage() {
           <h2 className="text-2xl font-bold text-neutral-900 mt-8">Contact</h2>
           <p>
             Questions about these terms? Contact us at{" "}
-            <a href="mailto:legal@go2hr.com" className="text-primary hover:underline">
-              legal@go2hr.com
+            <a href="mailto:legal@go2hr.io" className="text-primary hover:underline">
+              legal@go2hr.io
             </a>
             .
           </p>

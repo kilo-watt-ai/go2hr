@@ -2,7 +2,7 @@ export const SITE_NAME = "Go2HR";
 export const SITE_TAGLINE = "Expert HR Consulting for Small Business";
 export const SITE_DESCRIPTION =
   "Connect with vetted, certified HR consultants. Book a session in minutes. Transparent pricing starting at $150/hr.";
-export const SITE_URL = "https://go2hr.com";
+export const SITE_URL = "https://go2hr.io";
 export const SITE_LOCATION = "Raleigh, NC";
 
 export const NAV_ITEMS = [

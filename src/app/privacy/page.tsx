@@ -88,8 +88,8 @@ export default function PrivacyPage() {
           <h2 className="text-2xl font-bold text-neutral-900 mt-8">Contact Us</h2>
           <p>
             If you have questions about this Privacy Policy, please contact us at{" "}
-            <a href="mailto:privacy@go2hr.com" className="text-primary hover:underline">
-              privacy@go2hr.com
+            <a href="mailto:privacy@go2hr.io" className="text-primary hover:underline">
+              privacy@go2hr.io
             </a>
             .
           </p>

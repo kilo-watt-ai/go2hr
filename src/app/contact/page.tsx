@@ -9,7 +9,7 @@ const contactInfo = [
   {
     icon: Mail,
     title: "Email Us",
-    detail: "hello@go2hr.com",
+    detail: "hello@go2hr.io",
     description: "We typically respond within 24 hours",
   },
   {
