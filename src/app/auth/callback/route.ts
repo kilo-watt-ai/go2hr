@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const type = searchParams.get("type");
   const redirect = searchParams.get("redirect") || "/dashboard/client";
 
   if (code) {
@@ -11,6 +12,11 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      // Password reset flow — redirect to set new password page
+      if (type === "recovery" || redirect === "/reset-password") {
+        return NextResponse.redirect(`${origin}/reset-password`);
+      }
+
       // Get user to determine role-based redirect
       const {
         data: { user },
@@ -24,7 +30,7 @@ export async function GET(request: Request) {
           ? "/dashboard/consultant"
           : "/dashboard/client";
 
-      return NextResponse.redirect(`${origin}${dashboardPath}`);
+      return NextResponse.redirect(`${origin}${redirect !== "/dashboard/client" ? redirect : dashboardPath}`);
     }
   }
 
