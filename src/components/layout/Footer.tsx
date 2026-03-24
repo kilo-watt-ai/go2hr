@@ -38,7 +38,7 @@ export default function Footer() {
               <span className="text-xl font-bold text-white">{SITE_NAME}</span>
             </Link>
             <p className="text-sm text-neutral-400 mb-4">
-              Connecting small businesses with vetted, SHRM-certified HR consultants.
+              Connecting small businesses with vetted, certified HR consultants.
             </p>
           </div>
 

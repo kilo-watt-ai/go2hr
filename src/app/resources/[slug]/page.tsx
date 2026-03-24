@@ -133,7 +133,7 @@ export default async function BlogPostPage({ params }: Props) {
                       {post.author}
                     </p>
                     <p className="text-sm text-neutral-600 mt-1">
-                      SHRM-certified HR consultant on the Go2HR platform.
+                      certified HR consultant on the Go2HR platform.
                       Specializing in NC employment law and small business HR.
                     </p>
                     {post.authorSlug && (

@@ -19,7 +19,7 @@ import Card from "@/components/ui/Card";
 export const metadata: Metadata = {
   title: "How It Works for Businesses",
   description:
-    "Learn how Go2HR connects your small business with vetted, SHRM-certified HR consultants. Take a quick quiz, browse matched experts, and book a session in minutes.",
+    "Learn how Go2HR connects your small business with vetted, certified HR consultants. Take a quick quiz, browse matched experts, and book a session in minutes.",
 };
 
 const steps = [
@@ -96,7 +96,7 @@ export default function HowItWorksBusinesses() {
             How {SITE_NAME} Works for Your Business
           </h1>
           <p className="mt-4 sm:mt-6 text-lg sm:text-xl text-neutral-600 max-w-2xl mx-auto">
-            Get matched with a vetted, SHRM-certified HR consultant in minutes.
+            Get matched with a vetted, certified HR consultant in minutes.
             No contracts. No guesswork. Just expert guidance when you need it.
           </p>
         </div>

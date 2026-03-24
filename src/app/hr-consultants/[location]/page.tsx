@@ -22,10 +22,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!loc) return { title: "Location Not Found" };
   return {
     title: `HR Consultants in ${loc.name}, ${loc.state}`,
-    description: `Find vetted, SHRM-certified HR consultants in ${loc.name}, ${loc.state}. Book a session starting at $150/hr. Specializing in NC employment law, compliance, and small business HR.`,
+    description: `Find vetted, certified HR consultants in ${loc.name}, ${loc.state}. Book a session starting at $150/hr. Specializing in NC employment law, compliance, and small business HR.`,
     openGraph: {
       title: `HR Consultants in ${loc.name}, ${loc.state} | ${SITE_NAME}`,
-      description: `Find vetted, SHRM-certified HR consultants in ${loc.name}, ${loc.state}. Book a session starting at $150/hr.`,
+      description: `Find vetted, certified HR consultants in ${loc.name}, ${loc.state}. Book a session starting at $150/hr.`,
     },
   };
 }
@@ -43,7 +43,7 @@ export default async function LocationPage({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: `${SITE_NAME} - ${loc.name}, ${loc.state}`,
-    description: `SHRM-certified HR consulting services for small businesses in ${loc.name}, ${loc.state}`,
+    description: `Certified HR consulting services for small businesses in ${loc.name}, ${loc.state}`,
     address: {
       "@type": "PostalAddress",
       addressLocality: loc.name,
@@ -73,7 +73,7 @@ export default async function LocationPage({ params }: Props) {
             HR Consultants in {loc.name}, {loc.state}
           </h1>
           <p className="text-xl text-primary-200 max-w-2xl mx-auto mb-8">
-            Connect with vetted, SHRM-certified HR consultants serving
+            Connect with vetted, certified HR consultants serving
             businesses in {loc.name} and the surrounding area.
             Book a session starting at $150/hr.
           </p>
@@ -117,7 +117,7 @@ export default async function LocationPage({ params }: Props) {
             Top-Rated Consultants Serving {loc.name}
           </h2>
           <p className="text-lg text-neutral-600 text-center max-w-2xl mx-auto mb-12">
-            All consultants are SHRM-certified and verified by our team.
+            All consultants are certified and verified by our team.
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {localConsultants.slice(0, 3).map((consultant) => (
@@ -180,7 +180,7 @@ export default async function LocationPage({ params }: Props) {
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { title: "SHRM Certified", desc: "Every consultant holds active SHRM or HRCI credentials" },
+              { title: "Certified", desc: "Every consultant holds active HR credentials (SHRM-CP, PHR, SPHR, or equivalent)" },
               { title: "NC Expertise", desc: "Deep knowledge of North Carolina employment law and regulations" },
               { title: "Transparent Pricing", desc: "Fixed $150/hr rate with no hidden fees or surprises" },
               { title: "Book in Minutes", desc: "Find, compare, and book a consultant online in under 5 minutes" },

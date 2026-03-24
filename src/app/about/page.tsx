@@ -39,7 +39,7 @@ const stats = [
   { value: "50+", label: "Vetted Consultants" },
   { value: "500+", label: "Sessions Completed" },
   { value: "4.8", label: "Average Rating" },
-  { value: "100%", label: "SHRM Certified" },
+  { value: "100%", label: "Certified" },
 ];
 
 export default function AboutPage() {
@@ -54,7 +54,7 @@ export default function AboutPage() {
             </h1>
             <p className="text-xl text-neutral-600 leading-relaxed">
               Go2HR connects small and mid-sized businesses with vetted,
-              SHRM-certified HR consultants — making professional HR guidance as
+              certified HR consultants — making professional HR guidance as
               easy to book as a doctor&apos;s appointment.
             </p>
           </div>
@@ -81,7 +81,7 @@ export default function AboutPage() {
               </p>
               <p>
                 We built Go2HR to bridge that gap. Our platform connects you with
-                SHRM-certified HR consultants who specialize in serving small
+                certified HR consultants who specialize in serving small
                 businesses. With transparent pricing, verified credentials, and a
                 booking process that takes minutes, getting expert HR help is now as
                 simple as it should be.
@@ -146,7 +146,7 @@ export default function AboutPage() {
           </p>
           <div className="flex items-center justify-center gap-2 text-neutral-500">
             <Shield className="w-5 h-5" />
-            <span className="text-sm">Every consultant is SHRM or HRCI certified and verified by our team</span>
+            <span className="text-sm">Every consultant is credential-verified by our team</span>
           </div>
         </div>
       </section>

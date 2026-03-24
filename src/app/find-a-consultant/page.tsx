@@ -6,7 +6,7 @@ import ConsultantDirectory from "@/components/search/ConsultantDirectory";
 
 export const metadata: Metadata = {
   title: "Find a Consultant",
-  description: `Browse ${SITE_NAME}'s directory of vetted, SHRM-certified HR consultants. Filter by specialty, industry, company size, and credentials. Book a session in minutes.`,
+  description: `Browse ${SITE_NAME}'s directory of vetted, certified HR consultants. Filter by specialty, industry, company size, and credentials. Book a session in minutes.`,
   openGraph: {
     title: `Find a Consultant | ${SITE_NAME}`,
     description: `Browse vetted HR consultants and book a session in minutes. Transparent pricing starting at $150/hr.`,
@@ -24,7 +24,7 @@ export default function FindAConsultantPage() {
               Find Your HR Consultant
             </h1>
             <p className="text-lg lg:text-xl text-neutral-600 leading-relaxed mb-8">
-              Browse our directory of vetted, SHRM-certified HR professionals.
+              Browse our directory of vetted, certified HR professionals.
               Filter by specialty, industry, or availability to find the perfect
               match for your business.
             </p>

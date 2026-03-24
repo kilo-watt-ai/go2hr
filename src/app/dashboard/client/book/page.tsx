@@ -28,7 +28,7 @@ export default function BookSessionPage() {
             Ready to book?
           </h2>
           <p className="text-neutral-500 max-w-md mx-auto mb-6">
-            Browse our directory of vetted, SHRM-certified HR consultants. Filter by
+            Browse our directory of vetted, certified HR consultants. Filter by
             specialty, industry experience, and availability to find the right match.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">

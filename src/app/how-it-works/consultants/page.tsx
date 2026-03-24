@@ -115,7 +115,7 @@ export default function HowItWorksConsultants() {
             Grow Your Consulting Practice with {SITE_NAME}
           </h1>
           <p className="mt-4 sm:mt-6 text-lg sm:text-xl text-primary-200 max-w-2xl mx-auto">
-            Join a marketplace of SHRM-certified HR professionals. Get
+            Join a marketplace of certified HR professionals. Get
             qualified leads, set your own schedule, and keep 80% of every
             engagement.
           </p>
@@ -272,7 +272,7 @@ export default function HowItWorksConsultants() {
             Ready to grow your practice?
           </h2>
           <p className="text-primary-200 mb-8 max-w-lg mx-auto">
-            Join a growing network of SHRM-certified HR professionals helping
+            Join a growing network of certified HR professionals helping
             small businesses thrive. Your next client is waiting.
           </p>
           <Button variant="secondary" size="lg" href="/signup/consultant">

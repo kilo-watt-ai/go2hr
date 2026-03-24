@@ -54,7 +54,7 @@ export default function Pricing() {
           </h1>
           <p className="mt-4 sm:mt-6 text-lg sm:text-xl text-neutral-600 max-w-2xl mx-auto">
             Choose the plan that fits your needs. Every session is with a
-            vetted, SHRM-certified HR consultant. No contracts, no hidden fees.
+            vetted, certified HR consultant. No contracts, no hidden fees.
           </p>
         </div>
       </section>

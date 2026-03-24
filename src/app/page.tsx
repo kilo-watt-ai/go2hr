@@ -26,7 +26,7 @@ const stats = [
   { label: "Vetted Consultants", value: "50+", icon: Users },
   { label: "Sessions Booked", value: "500+", icon: Calendar },
   { label: "Average Rating", value: "4.8", icon: Star },
-  { label: "SHRM Certified", value: "100%", icon: Shield },
+  { label: "Certified", value: "100%", icon: Shield },
 ];
 
 const steps = [
@@ -91,7 +91,7 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36">
           <div className="max-w-3xl mx-auto text-center">
             <Badge variant="secondary" className="mb-6 text-sm px-4 py-1.5">
-              SHRM-Certified Consultants, On Your Schedule
+              Certified Consultants, On Your Schedule
             </Badge>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-neutral-900 tracking-tight leading-tight">
               Expert HR Consulting{" "}
@@ -200,7 +200,7 @@ export default function HomePage() {
               Meet Our Consultants
             </h2>
             <p className="mt-4 text-lg text-neutral-600">
-              Vetted, SHRM-certified HR professionals ready to help your
+              Vetted, certified HR professionals ready to help your
               business.
             </p>
           </div>
