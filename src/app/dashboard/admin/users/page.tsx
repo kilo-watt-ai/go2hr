@@ -7,9 +7,14 @@ import {
   Shield,
   ChevronDown,
   AlertTriangle,
+  Plus,
+  X,
+  CheckCircle,
 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 
 interface User {
   id: string;
@@ -43,6 +48,12 @@ export default function AdminUsersPage() {
   } | null>(null);
   const [filter, setFilter] = useState<"all" | "client" | "consultant" | "admin">("all");
 
+  // Add User modal state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState("");
+  const [addSuccess, setAddSuccess] = useState("");
+
   const filtered = filter === "all" ? users : users.filter((u) => u.role === filter);
 
   function handleRoleChange(userId: string, newRole: "client" | "consultant" | "admin") {
@@ -50,7 +61,6 @@ export default function AdminUsersPage() {
     const user = users.find((u) => u.id === userId);
     if (!user || user.role === newRole) return;
 
-    // Require confirmation for admin changes
     if (newRole === "admin" || user.role === "admin") {
       setConfirmAction({ userId, newRole });
       return;
@@ -64,9 +74,59 @@ export default function AdminUsersPage() {
       prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
     );
     setConfirmAction(null);
+  }
 
-    // In production, this would call the Supabase Admin API to update user metadata
-    // await supabase.auth.admin.updateUserById(userId, { user_metadata: { role: newRole } })
+  async function handleAddUser(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setAddLoading(true);
+    setAddError("");
+    setAddSuccess("");
+
+    const formData = new FormData(e.currentTarget);
+    const firstName = formData.get("firstName") as string;
+    const lastName = formData.get("lastName") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const role = formData.get("role") as "client" | "consultant" | "admin";
+    const company = formData.get("company") as string;
+
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firstName, lastName, email, password, role, company }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setAddError(data.error || "Failed to create user.");
+        return;
+      }
+
+      // Add to local list
+      const newUser: User = {
+        id: data.user.id || `u${Date.now()}`,
+        name: `${firstName} ${lastName}`,
+        email,
+        company: company || (role === "consultant" ? "Independent" : ""),
+        role,
+        joined: new Date().toISOString().split("T")[0],
+        sessions: 0,
+      };
+      setUsers((prev) => [newUser, ...prev]);
+      setAddSuccess(`Account created for ${firstName} ${lastName} (${email})`);
+
+      // Reset form after a moment
+      setTimeout(() => {
+        setShowAddModal(false);
+        setAddSuccess("");
+      }, 2000);
+    } catch {
+      setAddError("Unable to connect. Please try again.");
+    } finally {
+      setAddLoading(false);
+    }
   }
 
   const roleOptions: { value: "client" | "consultant" | "admin"; label: string; color: string }[] = [
@@ -86,9 +146,101 @@ export default function AdminUsersPage() {
             {users.length} registered users. Click a role badge to change permissions.
           </p>
         </div>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => {
+            setShowAddModal(true);
+            setAddError("");
+            setAddSuccess("");
+          }}
+        >
+          <Plus className="w-4 h-4 mr-1.5" />
+          Add User
+        </Button>
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Add User Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <Card className="p-6 max-w-lg mx-4 w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-neutral-900">Add New User</h2>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="p-1 hover:bg-neutral-100 rounded-lg transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5 text-neutral-400" />
+              </button>
+            </div>
+
+            {addSuccess ? (
+              <div className="text-center py-6">
+                <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-7 h-7 text-success" />
+                </div>
+                <p className="text-neutral-900 font-medium">{addSuccess}</p>
+              </div>
+            ) : (
+              <form onSubmit={handleAddUser} className="space-y-4">
+                {addError && (
+                  <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">
+                    {addError}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Input label="First Name" name="firstName" placeholder="Jane" required />
+                  <Input label="Last Name" name="lastName" placeholder="Smith" required />
+                </div>
+
+                <Input label="Email" name="email" type="email" placeholder="jane@company.com" required />
+
+                <Input label="Temporary Password" name="password" type="text" placeholder="They can change this later" required />
+
+                <div className="space-y-1">
+                  <label htmlFor="add-role" className="block text-sm font-medium text-neutral-700">
+                    Role
+                  </label>
+                  <select
+                    id="add-role"
+                    name="role"
+                    required
+                    className="w-full px-4 py-3 rounded-lg border border-neutral-300 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors min-h-[44px]"
+                  >
+                    <option value="client">Client (Business)</option>
+                    <option value="consultant">Consultant</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
+                <Input label="Company (optional)" name="company" placeholder="Acme Inc." />
+
+                <p className="text-xs text-neutral-500">
+                  The user will be able to log in immediately with the email and password you set.
+                  They can change their password from the forgot-password page.
+                </p>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="px-4 py-2.5 text-sm font-medium text-neutral-700 bg-neutral-100 rounded-lg hover:bg-neutral-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <Button type="submit" size="md" className="flex-1" disabled={addLoading}>
+                    {addLoading ? "Creating..." : "Create Account"}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* Role Change Confirmation Modal */}
       {confirmAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <Card className="p-6 max-w-md mx-4">
@@ -177,21 +329,11 @@ export default function AdminUsersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-neutral-50 border-b border-neutral-200">
-                <th className="text-left px-6 py-3 font-medium text-neutral-500">
-                  User
-                </th>
-                <th className="text-left px-6 py-3 font-medium text-neutral-500">
-                  Company
-                </th>
-                <th className="text-left px-6 py-3 font-medium text-neutral-500">
-                  Role
-                </th>
-                <th className="text-left px-6 py-3 font-medium text-neutral-500">
-                  Joined
-                </th>
-                <th className="text-right px-6 py-3 font-medium text-neutral-500">
-                  Sessions
-                </th>
+                <th className="text-left px-6 py-3 font-medium text-neutral-500">User</th>
+                <th className="text-left px-6 py-3 font-medium text-neutral-500">Company</th>
+                <th className="text-left px-6 py-3 font-medium text-neutral-500">Role</th>
+                <th className="text-left px-6 py-3 font-medium text-neutral-500">Joined</th>
+                <th className="text-right px-6 py-3 font-medium text-neutral-500">Sessions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
@@ -199,9 +341,7 @@ export default function AdminUsersPage() {
                 <tr key={user.id} className="hover:bg-neutral-50">
                   <td className="px-6 py-4">
                     <div>
-                      <p className="font-medium text-neutral-900">
-                        {user.name}
-                      </p>
+                      <p className="font-medium text-neutral-900">{user.name}</p>
                       <p className="text-neutral-500 text-xs">{user.email}</p>
                     </div>
                   </td>
@@ -210,9 +350,7 @@ export default function AdminUsersPage() {
                     <div className="relative">
                       <button
                         onClick={() =>
-                          setRoleMenuOpen(
-                            roleMenuOpen === user.id ? null : user.id
-                          )
+                          setRoleMenuOpen(roleMenuOpen === user.id ? null : user.id)
                         }
                         className="flex items-center gap-1 group"
                         title="Click to change role"
@@ -236,20 +374,14 @@ export default function AdminUsersPage() {
                           {roleOptions.map((opt) => (
                             <button
                               key={opt.value}
-                              onClick={() =>
-                                handleRoleChange(user.id, opt.value)
-                              }
+                              onClick={() => handleRoleChange(user.id, opt.value)}
                               className={`w-full text-left px-4 py-2 text-sm hover:bg-neutral-50 transition-colors flex items-center justify-between ${
-                                user.role === opt.value
-                                  ? "font-medium bg-neutral-50"
-                                  : ""
+                                user.role === opt.value ? "font-medium bg-neutral-50" : ""
                               }`}
                             >
                               <span className={opt.color}>{opt.label}</span>
                               {user.role === opt.value && (
-                                <span className="text-xs text-neutral-400">
-                                  current
-                                </span>
+                                <span className="text-xs text-neutral-400">current</span>
                               )}
                             </button>
                           ))}
@@ -276,9 +408,8 @@ export default function AdminUsersPage() {
       {/* Info note */}
       <Card className="p-4 mt-4 border-primary-100 bg-primary-50">
         <p className="text-sm text-primary">
-          <strong>Changing roles:</strong> Click any role badge to change a
-          user&apos;s permissions. Granting or removing admin access requires
-          confirmation. Role changes take effect immediately.
+          <strong>Managing users:</strong> Click <strong>Add User</strong> to create a new account.
+          Click any role badge to change permissions. Granting or removing admin access requires confirmation.
         </p>
       </Card>
     </div>
