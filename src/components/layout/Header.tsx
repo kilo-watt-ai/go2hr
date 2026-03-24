@@ -1,14 +1,109 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Menu,
+  X,
+  ChevronDown,
+  LayoutDashboard,
+  MessageSquare,
+  UserCircle,
+  LogOut,
+  Shield,
+} from "lucide-react";
 import { SITE_NAME, NAV_ITEMS } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
 
+interface UserInfo {
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: "client" | "consultant" | "admin";
+  initials: string;
+}
+
 export default function Header() {
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [user, setUser] = useState<UserInfo | null>(null);
+
+  useEffect(() => {
+    try {
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data }) => {
+        if (data.user) {
+          const meta = data.user.user_metadata || {};
+          const firstName = meta.firstName || meta.first_name || "";
+          const lastName = meta.lastName || meta.last_name || "";
+          setUser({
+            email: data.user.email || "",
+            firstName,
+            lastName,
+            role: (meta.role as UserInfo["role"]) || "client",
+            initials:
+              (firstName[0] || "") + (lastName[0] || "") ||
+              (data.user.email?.[0]?.toUpperCase() || "U"),
+          });
+        }
+      });
+    } catch {
+      // Supabase not configured — user stays null
+    }
+  }, []);
+
+  async function handleLogout() {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      setUser(null);
+      setUserMenuOpen(false);
+      router.push("/");
+      router.refresh();
+    } catch {
+      // ignore
+    }
+  }
+
+  const dashboardPath =
+    user?.role === "admin"
+      ? "/dashboard/admin"
+      : user?.role === "consultant"
+      ? "/dashboard/consultant"
+      : "/dashboard/client";
+
+  const userMenuItems = user
+    ? [
+        {
+          label: "Dashboard",
+          href: dashboardPath,
+          icon: LayoutDashboard,
+        },
+        {
+          label: "Messages",
+          href: `${dashboardPath === "/dashboard/admin" ? "/dashboard/client" : dashboardPath}/messages`,
+          icon: MessageSquare,
+        },
+        {
+          label: "Profile",
+          href: `${dashboardPath === "/dashboard/admin" ? "/dashboard/admin/settings" : dashboardPath + "/profile"}`,
+          icon: UserCircle,
+        },
+        ...(user.role === "admin"
+          ? [
+              {
+                label: "Admin Portal",
+                href: "/dashboard/admin",
+                icon: Shield,
+              },
+            ]
+          : []),
+      ]
+    : [];
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
@@ -26,7 +121,10 @@ export default function Header() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-1" aria-label="Main navigation">
+          <nav
+            className="hidden lg:flex items-center gap-1"
+            aria-label="Main navigation"
+          >
             {NAV_ITEMS.map((item) =>
               "children" in item && item.children ? (
                 <div
@@ -69,14 +167,85 @@ export default function Header() {
             )}
           </nav>
 
-          {/* Desktop Auth Buttons */}
+          {/* Desktop Right Side */}
           <div className="hidden lg:flex items-center gap-3">
-            <Button variant="ghost" size="sm" href="/login">
-              Log In
-            </Button>
-            <Button variant="primary" size="sm" href="/signup/business">
-              Get Started
-            </Button>
+            {user ? (
+              /* Logged-in user menu */
+              <div
+                className="relative"
+                onMouseEnter={() => setUserMenuOpen(true)}
+                onMouseLeave={() => setUserMenuOpen(false)}
+              >
+                <button
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50 transition-colors"
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="true"
+                >
+                  <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">
+                      {user.initials}
+                    </span>
+                  </div>
+                  <div className="text-left hidden xl:block">
+                    <p className="text-sm font-medium text-neutral-900 leading-tight">
+                      {user.firstName} {user.lastName}
+                    </p>
+                    <p className="text-xs text-neutral-500 capitalize">
+                      {user.role}
+                    </p>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-neutral-400" />
+                </button>
+
+                {userMenuOpen && (
+                  <div className="absolute top-full right-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-neutral-200 py-2">
+                    {/* User info header */}
+                    <div className="px-4 py-2 border-b border-neutral-100">
+                      <p className="text-sm font-medium text-neutral-900">
+                        {user.firstName} {user.lastName}
+                      </p>
+                      <p className="text-xs text-neutral-500">{user.email}</p>
+                    </div>
+
+                    {/* Menu items */}
+                    {userMenuItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className="flex items-center gap-3 px-4 py-2.5 text-neutral-700 hover:bg-primary-50 hover:text-primary transition-colors text-sm"
+                        >
+                          <Icon className="w-4 h-4 text-neutral-400" />
+                          {item.label}
+                        </Link>
+                      );
+                    })}
+
+                    {/* Logout */}
+                    <div className="border-t border-neutral-100 mt-1 pt-1">
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-neutral-700 hover:bg-red-50 hover:text-red-600 transition-colors text-sm"
+                      >
+                        <LogOut className="w-4 h-4 text-neutral-400" />
+                        Log Out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Logged-out buttons */
+              <>
+                <Button variant="ghost" size="sm" href="/login">
+                  Log In
+                </Button>
+                <Button variant="primary" size="sm" href="/signup/business">
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -86,7 +255,11 @@ export default function Header() {
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
           >
-            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </button>
         </div>
       </div>
@@ -94,7 +267,10 @@ export default function Header() {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div className="lg:hidden border-t border-neutral-200 bg-white">
-          <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1" aria-label="Mobile navigation">
+          <nav
+            className="max-w-7xl mx-auto px-4 py-4 space-y-1"
+            aria-label="Mobile navigation"
+          >
             {NAV_ITEMS.map((item) =>
               "children" in item && item.children ? (
                 <div key={item.label} className="space-y-1">
@@ -123,13 +299,74 @@ export default function Header() {
                 </Link>
               )
             )}
-            <div className="pt-4 border-t border-neutral-200 space-y-2">
-              <Button variant="outline" size="md" href="/login" className="w-full">
-                Log In
-              </Button>
-              <Button variant="primary" size="md" href="/signup/business" className="w-full">
-                Get Started
-              </Button>
+
+            {/* Mobile auth section */}
+            <div className="pt-4 border-t border-neutral-200 space-y-1">
+              {user ? (
+                <>
+                  {/* User info */}
+                  <div className="px-4 py-3 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">
+                        {user.initials}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-neutral-900 text-sm">
+                        {user.firstName} {user.lastName}
+                      </p>
+                      <p className="text-xs text-neutral-500 capitalize">
+                        {user.role}
+                      </p>
+                    </div>
+                  </div>
+
+                  {userMenuItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-primary-50 hover:text-primary rounded-lg transition-colors"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <Icon className="w-5 h-5 text-neutral-400" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMobileOpen(false);
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-neutral-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                  >
+                    <LogOut className="w-5 h-5 text-neutral-400" />
+                    Log Out
+                  </button>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    size="md"
+                    href="/login"
+                    className="w-full"
+                  >
+                    Log In
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    href="/signup/business"
+                    className="w-full"
+                  >
+                    Get Started
+                  </Button>
+                </div>
+              )}
             </div>
           </nav>
         </div>
