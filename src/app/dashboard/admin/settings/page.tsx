@@ -1,86 +1,196 @@
-import type { Metadata } from "next";
-import { Settings, Globe, Mail, CreditCard, Shield, Bell } from "lucide-react";
+"use client";
+
+import { useState, useEffect } from "react";
+import {
+  Globe,
+  Mail,
+  CreditCard,
+  Shield,
+  Bell,
+  Loader2,
+  CheckCircle,
+  Pencil,
+  Save,
+  X,
+  RefreshCw,
+} from "lucide-react";
 import Card from "@/components/ui/Card";
+import type { LucideIcon } from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "Admin Settings",
-};
+interface Setting {
+  key: string;
+  value: string;
+  label: string;
+  category: string;
+}
 
-const settingsSections = [
+interface SectionConfig {
+  category: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+}
+
+const sectionConfigs: SectionConfig[] = [
   {
-    icon: Globe,
+    category: "site",
     title: "Site Settings",
-    description: "Manage site name, description, and public-facing content",
-    items: [
-      { label: "Site Name", value: "Go2HR" },
-      { label: "Default Hourly Rate", value: "$150" },
-      { label: "Platform Fee", value: "20%" },
-      { label: "Session Types", value: "30 min, 60 min" },
-    ],
+    description: "Manage site name, pricing, and session configuration",
+    icon: Globe,
   },
   {
-    icon: Mail,
+    category: "email",
     title: "Email & Notifications",
-    description: "Configure email templates and notification preferences",
-    items: [
-      { label: "Email Provider", value: "Loops.so" },
-      { label: "Admin Notification Email", value: "hello@go2hr.com" },
-      { label: "Send booking confirmations", value: "Enabled" },
-      { label: "Send session reminders", value: "24hr + 1hr before" },
-    ],
+    description: "Configure notification email address",
+    icon: Mail,
   },
   {
-    icon: CreditCard,
+    category: "payments",
     title: "Payments",
-    description: "Stripe configuration and payout settings",
-    items: [
-      { label: "Payment Provider", value: "Stripe (not connected)" },
-      { label: "Payout Schedule", value: "24 hours post-session" },
-      { label: "Consultant Split", value: "80%" },
-      { label: "1099-K Threshold", value: "$600/year" },
-    ],
+    description: "Payout schedule and revenue split configuration",
+    icon: CreditCard,
   },
   {
-    icon: Shield,
-    title: "Security & Auth",
-    description: "Authentication and access control settings",
-    items: [
-      { label: "Auth Provider", value: "Supabase" },
-      { label: "Password Reset", value: "Enabled" },
-      { label: "Consultant Approval", value: "Manual review required" },
-      { label: "Review Moderation", value: "48-hour review window" },
-    ],
-  },
-  {
-    icon: Bell,
+    category: "moderation",
     title: "Moderation",
     description: "Content moderation and quality control",
-    items: [
-      { label: "Auto-publish reviews", value: "Disabled (manual review)" },
-      { label: "Min reviews for rating display", value: "3 reviews" },
-      { label: "Review character limit", value: "300 characters" },
-      { label: "Document retention", value: "24 months" },
-    ],
+    icon: Bell,
   },
 ];
 
 export default function AdminSettingsPage() {
+  const [settings, setSettings] = useState<Setting[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+
+  async function fetchSettings() {
+    setLoading(true);
+    setFetchError("");
+    try {
+      const res = await fetch("/api/admin/settings");
+      const data = await res.json();
+      if (res.ok && data.settings) {
+        setSettings(data.settings);
+      } else {
+        setFetchError(data.error || "Failed to load settings");
+      }
+    } catch {
+      setFetchError("Unable to connect. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  function startEdit(setting: Setting) {
+    setEditingKey(setting.key);
+    setEditValue(setting.value);
+    setSaveSuccess(null);
+  }
+
+  function cancelEdit() {
+    setEditingKey(null);
+    setEditValue("");
+  }
+
+  async function saveEdit(key: string) {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, value: editValue }),
+      });
+
+      if (res.ok) {
+        setSettings((prev) =>
+          prev.map((s) => (s.key === key ? { ...s, value: editValue } : s))
+        );
+        setEditingKey(null);
+        setSaveSuccess(key);
+        setTimeout(() => setSaveSuccess(null), 2000);
+      }
+    } catch {
+      // keep editing state on failure
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function getSettingsForCategory(category: string): Setting[] {
+    return settings.filter((s) => s.category === category);
+  }
+
+  if (loading) {
+    return (
+      <div className="p-6 lg:p-10 max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-2xl lg:text-3xl font-bold text-neutral-900">Settings</h1>
+        </div>
+        <Card className="p-12 text-center">
+          <Loader2 className="w-8 h-8 text-neutral-300 animate-spin mx-auto mb-3" />
+          <p className="text-neutral-500">Loading settings...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="p-6 lg:p-10 max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-2xl lg:text-3xl font-bold text-neutral-900">Settings</h1>
+        </div>
+        <Card className="p-12 text-center">
+          <p className="text-red-600 mb-3">{fetchError}</p>
+          <button
+            onClick={fetchSettings}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Try Again
+          </button>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 lg:p-10 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-neutral-900">
-          Settings
-        </h1>
-        <p className="mt-1 text-neutral-500">
-          Platform configuration and preferences.
-        </p>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-neutral-900">
+            Settings
+          </h1>
+          <p className="mt-1 text-neutral-500">
+            Platform configuration. Click the pencil icon to edit any value.
+          </p>
+        </div>
+        <button
+          onClick={fetchSettings}
+          className="p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+          title="Refresh settings"
+        >
+          <RefreshCw className="w-4 h-4" />
+        </button>
       </div>
 
       <div className="space-y-6">
-        {settingsSections.map((section) => {
+        {sectionConfigs.map((section) => {
           const Icon = section.icon;
+          const sectionSettings = getSettingsForCategory(section.category);
+
+          if (sectionSettings.length === 0) return null;
+
           return (
-            <Card key={section.title} className="p-6">
+            <Card key={section.category} className="p-6">
               <div className="flex items-start gap-3 mb-4">
                 <div className="w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center shrink-0">
                   <Icon className="w-5 h-5 text-neutral-600" />
@@ -94,18 +204,67 @@ export default function AdminSettingsPage() {
                   </p>
                 </div>
               </div>
-              <div className="space-y-3 ml-[52px]">
-                {section.items.map((item) => (
+
+              <div className="space-y-2 ml-[52px]">
+                {sectionSettings.map((setting) => (
                   <div
-                    key={item.label}
-                    className="flex items-center justify-between py-2 px-3 rounded-lg bg-neutral-50"
+                    key={setting.key}
+                    className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-neutral-50 group"
                   >
-                    <span className="text-sm text-neutral-700">
-                      {item.label}
+                    <span className="text-sm text-neutral-700 shrink-0 mr-4">
+                      {setting.label}
                     </span>
-                    <span className="text-sm font-medium text-neutral-900">
-                      {item.value}
-                    </span>
+
+                    {editingKey === setting.key ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="px-3 py-1.5 text-sm border border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 w-48"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveEdit(setting.key);
+                            if (e.key === "Escape") cancelEdit();
+                          }}
+                        />
+                        <button
+                          onClick={() => saveEdit(setting.key)}
+                          disabled={saving}
+                          className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          title="Save"
+                        >
+                          {saving ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Save className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className="p-1.5 text-neutral-400 hover:bg-neutral-100 rounded-lg transition-colors"
+                          title="Cancel"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {saveSuccess === setting.key && (
+                          <CheckCircle className="w-4 h-4 text-emerald-500" />
+                        )}
+                        <span className="text-sm font-medium text-neutral-900">
+                          {setting.value}
+                        </span>
+                        <button
+                          onClick={() => startEdit(setting)}
+                          className="p-1.5 text-neutral-300 hover:text-primary hover:bg-primary-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                          title="Edit"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -114,10 +273,46 @@ export default function AdminSettingsPage() {
         })}
       </div>
 
-      <Card className="p-4 mt-6 border-primary-100 bg-primary-50">
-        <p className="text-sm text-primary">
-          Settings are currently read-only. Once your database is connected,
-          these values will be editable and saved to your Supabase instance.
+      {/* Static info sections that aren't in the database */}
+      <Card className="p-6 mt-6">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center shrink-0">
+            <Shield className="w-5 h-5 text-neutral-600" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-neutral-900">
+              Security &amp; Auth
+            </h2>
+            <p className="text-sm text-neutral-500">
+              Authentication provider configuration
+            </p>
+          </div>
+        </div>
+        <div className="space-y-2 ml-[52px]">
+          {[
+            { label: "Auth Provider", value: "Supabase" },
+            { label: "Email Provider", value: "Loops.so" },
+            { label: "Password Reset", value: "In-app (no email required)" },
+            { label: "Consultant Approval", value: "Manual review required" },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-neutral-50"
+            >
+              <span className="text-sm text-neutral-700">{item.label}</span>
+              <span className="text-sm font-medium text-neutral-900">
+                {item.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="p-4 mt-6 border-emerald-100 bg-emerald-50">
+        <p className="text-sm text-emerald-800">
+          <strong>Live settings:</strong> Changes are saved to your Supabase
+          database immediately and persist across sessions. Hover any value and
+          click the pencil icon to edit.
         </p>
       </Card>
     </div>
