@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Users,
   Building2,
@@ -10,6 +10,8 @@ import {
   Plus,
   X,
   CheckCircle,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -18,29 +20,18 @@ import Input from "@/components/ui/Input";
 
 interface User {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   company: string;
   role: "client" | "consultant" | "admin";
-  joined: string;
-  sessions: number;
+  created_at: string;
 }
 
-const initialUsers: User[] = [
-  { id: "u1", name: "Brian Peters", email: "brian@repeteconsulting.com", company: "Go2HR", role: "admin", joined: "2026-01-01", sessions: 0 },
-  { id: "u2", name: "Mike Thompson", email: "mike@apexdigital.com", company: "Apex Digital Solutions", role: "client", joined: "2026-03-15", sessions: 3 },
-  { id: "u3", name: "Lisa Kim", email: "lisa@brightwellness.com", company: "Bright Wellness Group", role: "client", joined: "2026-03-10", sessions: 2 },
-  { id: "u4", name: "James Park", email: "james@rtpinnovations.com", company: "RTP Innovations", role: "client", joined: "2026-02-28", sessions: 5 },
-  { id: "u5", name: "Sandra Wilson", email: "sandra@durhambuilders.com", company: "Durham Builders Co.", role: "client", joined: "2026-02-20", sessions: 1 },
-  { id: "u6", name: "Carlos Diaz", email: "carlos@precisionmfg.com", company: "Precision Manufacturing", role: "client", joined: "2026-02-15", sessions: 4 },
-  { id: "u7", name: "Emily Stone", email: "emily@launchpadtech.com", company: "LaunchPad Tech", role: "client", joined: "2026-02-10", sessions: 2 },
-  { id: "u8", name: "Sarah Mitchell", email: "sarah@hrconsulting.com", company: "Independent", role: "consultant", joined: "2026-01-15", sessions: 47 },
-  { id: "u9", name: "Marcus Johnson", email: "marcus@hrpro.com", company: "Independent", role: "consultant", joined: "2026-01-20", sessions: 32 },
-  { id: "u10", name: "Jennifer Okafor", email: "jen@hrconsulting.com", company: "Independent", role: "consultant", joined: "2026-01-25", sessions: 28 },
-];
-
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
   const [roleMenuOpen, setRoleMenuOpen] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{
     userId: string;
@@ -53,6 +44,29 @@ export default function AdminUsersPage() {
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState("");
   const [addSuccess, setAddSuccess] = useState("");
+
+  // Fetch users from Supabase
+  async function fetchUsers() {
+    setLoading(true);
+    setFetchError("");
+    try {
+      const res = await fetch("/api/admin/users");
+      const data = await res.json();
+      if (res.ok && data.users) {
+        setUsers(data.users);
+      } else {
+        setFetchError(data.error || "Failed to load users");
+      }
+    } catch {
+      setFetchError("Unable to connect. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const filtered = filter === "all" ? users : users.filter((u) => u.role === filter);
 
@@ -74,6 +88,7 @@ export default function AdminUsersPage() {
       prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
     );
     setConfirmAction(null);
+    // TODO: Persist role change to Supabase when service role key is configured
   }
 
   async function handleAddUser(e: React.FormEvent<HTMLFormElement>) {
@@ -104,24 +119,14 @@ export default function AdminUsersPage() {
         return;
       }
 
-      // Add to local list
-      const newUser: User = {
-        id: data.user.id || `u${Date.now()}`,
-        name: `${firstName} ${lastName}`,
-        email,
-        company: company || (role === "consultant" ? "Independent" : ""),
-        role,
-        joined: new Date().toISOString().split("T")[0],
-        sessions: 0,
-      };
-      setUsers((prev) => [newUser, ...prev]);
       setAddSuccess(`Account created for ${firstName} ${lastName} (${email})`);
 
-      // Reset form after a moment
+      // Refresh the user list from Supabase
       setTimeout(() => {
+        fetchUsers();
         setShowAddModal(false);
         setAddSuccess("");
-      }, 2000);
+      }, 1500);
     } catch {
       setAddError("Unable to connect. Please try again.");
     } finally {
@@ -143,21 +148,32 @@ export default function AdminUsersPage() {
             Users
           </h1>
           <p className="mt-1 text-neutral-500">
-            {users.length} registered users. Click a role badge to change permissions.
+            {loading
+              ? "Loading users..."
+              : `${users.length} registered user${users.length !== 1 ? "s" : ""}. Click a role badge to change permissions.`}
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => {
-            setShowAddModal(true);
-            setAddError("");
-            setAddSuccess("");
-          }}
-        >
-          <Plus className="w-4 h-4 mr-1.5" />
-          Add User
-        </Button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchUsers}
+            className="p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+            title="Refresh user list"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          </button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => {
+              setShowAddModal(true);
+              setAddError("");
+              setAddSuccess("");
+            }}
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            Add User
+          </Button>
+        </div>
       </div>
 
       {/* Add User Modal */}
@@ -219,7 +235,6 @@ export default function AdminUsersPage() {
 
                 <p className="text-xs text-neutral-500">
                   The user will be able to log in immediately with the email and password you set.
-                  They can change their password from the forgot-password page.
                 </p>
 
                 <div className="flex gap-3 pt-2">
@@ -256,8 +271,8 @@ export default function AdminUsersPage() {
                 </h3>
                 <p className="text-sm text-neutral-600 mt-1">
                   {confirmAction.newRole === "admin"
-                    ? `This will give ${users.find((u) => u.id === confirmAction.userId)?.name} full admin access to the platform, including user management, financial data, and settings.`
-                    : `This will remove admin access for ${users.find((u) => u.id === confirmAction.userId)?.name}. They will be changed to ${confirmAction.newRole} role.`}
+                    ? `This will give ${users.find((u) => u.id === confirmAction.userId)?.first_name} ${users.find((u) => u.id === confirmAction.userId)?.last_name} full admin access.`
+                    : `This will remove admin access for ${users.find((u) => u.id === confirmAction.userId)?.first_name} ${users.find((u) => u.id === confirmAction.userId)?.last_name}.`}
                 </p>
               </div>
             </div>
@@ -324,92 +339,113 @@ export default function AdminUsersPage() {
       </div>
 
       {/* User table */}
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-neutral-50 border-b border-neutral-200">
-                <th className="text-left px-6 py-3 font-medium text-neutral-500">User</th>
-                <th className="text-left px-6 py-3 font-medium text-neutral-500">Company</th>
-                <th className="text-left px-6 py-3 font-medium text-neutral-500">Role</th>
-                <th className="text-left px-6 py-3 font-medium text-neutral-500">Joined</th>
-                <th className="text-right px-6 py-3 font-medium text-neutral-500">Sessions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {filtered.map((user) => (
-                <tr key={user.id} className="hover:bg-neutral-50">
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="font-medium text-neutral-900">{user.name}</p>
-                      <p className="text-neutral-500 text-xs">{user.email}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-neutral-600">{user.company}</td>
-                  <td className="px-6 py-4">
-                    <div className="relative">
-                      <button
-                        onClick={() =>
-                          setRoleMenuOpen(roleMenuOpen === user.id ? null : user.id)
-                        }
-                        className="flex items-center gap-1 group"
-                        title="Click to change role"
-                      >
-                        <Badge
-                          variant={
-                            user.role === "admin"
-                              ? "secondary"
-                              : user.role === "consultant"
-                              ? "success"
-                              : "primary"
-                          }
-                        >
-                          {user.role}
-                        </Badge>
-                        <ChevronDown className="w-3 h-3 text-neutral-400 group-hover:text-neutral-600" />
-                      </button>
-
-                      {roleMenuOpen === user.id && (
-                        <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg z-10 py-1 min-w-[140px]">
-                          {roleOptions.map((opt) => (
-                            <button
-                              key={opt.value}
-                              onClick={() => handleRoleChange(user.id, opt.value)}
-                              className={`w-full text-left px-4 py-2 text-sm hover:bg-neutral-50 transition-colors flex items-center justify-between ${
-                                user.role === opt.value ? "font-medium bg-neutral-50" : ""
-                              }`}
-                            >
-                              <span className={opt.color}>{opt.label}</span>
-                              {user.role === opt.value && (
-                                <span className="text-xs text-neutral-400">current</span>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-neutral-500">
-                    {new Date(user.joined).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </td>
-                  <td className="px-6 py-4 text-right text-neutral-900 font-medium">
-                    {user.sessions}
-                  </td>
+      {loading ? (
+        <Card className="p-12 text-center">
+          <Loader2 className="w-8 h-8 text-neutral-300 animate-spin mx-auto mb-3" />
+          <p className="text-neutral-500">Loading users from Supabase...</p>
+        </Card>
+      ) : fetchError ? (
+        <Card className="p-12 text-center">
+          <p className="text-red-600 mb-3">{fetchError}</p>
+          <Button variant="outline" size="sm" onClick={fetchUsers}>
+            Try Again
+          </Button>
+        </Card>
+      ) : filtered.length === 0 ? (
+        <Card className="p-12 text-center">
+          <Users className="w-12 h-12 text-neutral-200 mx-auto mb-3" />
+          <p className="text-neutral-500">
+            {filter === "all" ? "No users yet." : `No ${filter}s found.`}
+          </p>
+        </Card>
+      ) : (
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-neutral-50 border-b border-neutral-200">
+                  <th className="text-left px-6 py-3 font-medium text-neutral-500">User</th>
+                  <th className="text-left px-6 py-3 font-medium text-neutral-500">Company</th>
+                  <th className="text-left px-6 py-3 font-medium text-neutral-500">Role</th>
+                  <th className="text-left px-6 py-3 font-medium text-neutral-500">Joined</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {filtered.map((user) => (
+                  <tr key={user.id} className="hover:bg-neutral-50">
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="font-medium text-neutral-900">
+                          {user.first_name} {user.last_name}
+                        </p>
+                        <p className="text-neutral-500 text-xs">{user.email}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-neutral-600">
+                      {user.company || "—"}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="relative">
+                        <button
+                          onClick={() =>
+                            setRoleMenuOpen(roleMenuOpen === user.id ? null : user.id)
+                          }
+                          className="flex items-center gap-1 group"
+                          title="Click to change role"
+                        >
+                          <Badge
+                            variant={
+                              user.role === "admin"
+                                ? "secondary"
+                                : user.role === "consultant"
+                                ? "success"
+                                : "primary"
+                            }
+                          >
+                            {user.role}
+                          </Badge>
+                          <ChevronDown className="w-3 h-3 text-neutral-400 group-hover:text-neutral-600" />
+                        </button>
 
-      {/* Info note */}
+                        {roleMenuOpen === user.id && (
+                          <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg z-10 py-1 min-w-[140px]">
+                            {roleOptions.map((opt) => (
+                              <button
+                                key={opt.value}
+                                onClick={() => handleRoleChange(user.id, opt.value)}
+                                className={`w-full text-left px-4 py-2 text-sm hover:bg-neutral-50 transition-colors flex items-center justify-between ${
+                                  user.role === opt.value ? "font-medium bg-neutral-50" : ""
+                                }`}
+                              >
+                                <span className={opt.color}>{opt.label}</span>
+                                {user.role === opt.value && (
+                                  <span className="text-xs text-neutral-400">current</span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-neutral-500">
+                      {new Date(user.created_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
       <Card className="p-4 mt-4 border-primary-100 bg-primary-50">
         <p className="text-sm text-primary">
-          <strong>Managing users:</strong> Click <strong>Add User</strong> to create a new account.
-          Click any role badge to change permissions. Granting or removing admin access requires confirmation.
+          <strong>Live data:</strong> This page shows real users from your Supabase database.
+          Click <strong>Add User</strong> to create a new account, or click any role badge to change permissions.
         </p>
       </Card>
     </div>
