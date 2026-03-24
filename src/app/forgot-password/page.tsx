@@ -1,46 +1,91 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { KeyRound, CheckCircle, ArrowLeft } from "lucide-react";
+import { KeyRound, CheckCircle, ArrowLeft, Mail, Lock } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
-  const [submitted, setSubmitted] = useState(false);
+  const router = useRouter();
+  const [step, setStep] = useState<"email" | "reset" | "success">("email");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [email, setEmail] = useState("");
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // Step 1: Sign in with email to verify account exists and authenticate
+  async function handleEmailSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+    const formData = new FormData(e.currentTarget);
+    const emailValue = formData.get("email") as string;
+    setEmail(emailValue);
+    setStep("reset");
+  }
+
+  // Step 2: Verify old password and set new one
+  async function handleResetSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError("");
+
     const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
+    const currentPassword = formData.get("currentPassword") as string;
+    const newPassword = formData.get("newPassword") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
+
+    if (newPassword.length < 8) {
+      setError("New password must be at least 8 characters.");
+      setLoading(false);
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError("New passwords do not match.");
+      setLoading(false);
+      return;
+    }
+
+    if (currentPassword === newPassword) {
+      setError("New password must be different from your current password.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      // 1. Trigger Supabase password reset
       const supabase = createClient();
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?type=recovery&redirect=/reset-password`,
+
+      // First, sign in with current password to verify identity
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: currentPassword,
       });
-      if (resetError) {
-        setError(resetError.message);
+
+      if (signInError) {
+        setError("Current password is incorrect. Please try again.");
+        setLoading(false);
         return;
       }
-      // 2. Fire the Loops.so event
-      try {
-        await fetch('/api/auth/forgot-password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
-      } catch {
-        // Email API failure is non-blocking
+
+      // Now update to new password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) {
+        setError(updateError.message);
+        setLoading(false);
+        return;
       }
-      setSubmitted(true);
+
+      // Sign out so they can log in fresh with new password
+      await supabase.auth.signOut();
+
+      setStep("success");
     } catch {
-      setError('Unable to connect. Please try again later.');
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -57,31 +102,20 @@ export default function ForgotPasswordPage() {
             Reset Your Password
           </h1>
           <p className="text-neutral-600">
-            Enter your email address and we&apos;ll send you a link to reset
-            your password.
+            {step === "email" && "Enter your email address to get started."}
+            {step === "reset" && "Verify your current password and choose a new one."}
+            {step === "success" && "Your password has been updated."}
           </p>
         </div>
 
         <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-8">
-          {submitted ? (
-            <div className="text-center py-6">
-              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-7 h-7 text-success" />
+          {/* Step 1: Email */}
+          {step === "email" && (
+            <form onSubmit={handleEmailSubmit} className="space-y-5">
+              <div className="flex items-center gap-2 text-sm text-neutral-500 mb-2">
+                <Mail className="w-4 h-4" />
+                <span>Step 1 of 2: Enter your email</span>
               </div>
-              <h2 className="text-xl font-bold text-neutral-900 mb-2">
-                Check Your Email
-              </h2>
-              <p className="text-neutral-600 text-sm mb-6">
-                If an account exists with that email address, we&apos;ve sent
-                password reset instructions. Check your inbox and spam folder.
-              </p>
-              <Button href="/login" variant="outline" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Login
-              </Button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
               <Input
                 label="Email Address"
                 name="email"
@@ -89,15 +123,90 @@ export default function ForgotPasswordPage() {
                 placeholder="you@company.com"
                 required
               />
-              {error && <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">{error}</div>}
-              <Button type="submit" size="lg" className="w-full" disabled={loading}>
-                {loading ? "Sending..." : "Send Reset Link"}
+              <Button type="submit" size="lg" className="w-full">
+                Continue
               </Button>
             </form>
           )}
+
+          {/* Step 2: Current + New Password */}
+          {step === "reset" && (
+            <form onSubmit={handleResetSubmit} className="space-y-5">
+              <div className="flex items-center gap-2 text-sm text-neutral-500 mb-2">
+                <Lock className="w-4 h-4" />
+                <span>Step 2 of 2: Reset password for {email}</span>
+              </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">
+                  {error}
+                </div>
+              )}
+              <Input
+                label="Current Password"
+                name="currentPassword"
+                type="password"
+                placeholder="Enter your current password"
+                required
+              />
+              <hr className="border-neutral-200" />
+              <Input
+                label="New Password"
+                name="newPassword"
+                type="password"
+                placeholder="At least 8 characters"
+                required
+              />
+              <Input
+                label="Confirm New Password"
+                name="confirmPassword"
+                type="password"
+                placeholder="Enter new password again"
+                required
+              />
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep("email");
+                    setError("");
+                  }}
+                  className="px-4 py-3 text-sm font-medium text-neutral-700 bg-neutral-100 rounded-lg hover:bg-neutral-200 transition-colors"
+                >
+                  Back
+                </button>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="flex-1"
+                  disabled={loading}
+                >
+                  {loading ? "Updating..." : "Update Password"}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {/* Success */}
+          {step === "success" && (
+            <div className="text-center py-6">
+              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-7 h-7 text-success" />
+              </div>
+              <h2 className="text-xl font-bold text-neutral-900 mb-2">
+                Password Updated
+              </h2>
+              <p className="text-neutral-600 text-sm mb-6">
+                Your password has been changed. Please log in with your new
+                password.
+              </p>
+              <Button href="/login" size="md">
+                Go to Login
+              </Button>
+            </div>
+          )}
         </div>
 
-        {!submitted && (
+        {step !== "success" && (
           <p className="text-center text-sm text-neutral-600 mt-6">
             <Link
               href="/login"
